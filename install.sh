@@ -5,7 +5,7 @@
 set -e
 
 REPO="maixiaomai18-ctrl/yyzl-deploy"
-TAR_NAME="yyzl-deploy-v20260425_0603.tar.gz"
+TAR_NAME="yyzl-deploy-v20260508_1014_92a470d5.tar.gz"
 INSTALL_DIR="/root/yyzl-deploy"
 
 echo ""
