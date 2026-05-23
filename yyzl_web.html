@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>YYZL封控速查 · TG MONITOR</title>
+<style>
+  /* ===== 浅色(日间)主题 默认 ===== */
+  :root{
+    --bg:#eef1f5;
+    --panel:#ffffff;
+    --panel2:#f4f6f9;
+    --line:#dde3ec;
+    --brand:#2f6fed;        /* 主蓝 */
+    --brand-d:#1f57c8;
+    --brand-l:#e8f0fe;
+    --text:#1d2433;
+    --text2:#6b7689;
+    --text3:#9aa3b2;
+    --me:#2f6fed;           /* 员工A气泡=蓝 */
+    --me-text:#ffffff;
+    --other:#e3f6ec;        /* 客户B气泡=绿 */
+    --other-text:#1d4d33;
+    --other-bd:#a8e0c2;
+    --del:#e0392b;
+    --del-bg:#fdeceb;
+    --kw-bg:#ffe27a;
+    --kw-text:#7a4a00;
+    --ok:#22a06b;
+    --shadow:0 1px 3px rgba(20,40,80,.08);
+  }
+  /* ===== 深色(夜间)主题 ===== */
+  body.dark{
+    --bg:#0e1421;
+    --panel:#161d2e;
+    --panel2:#1b2436;
+    --line:#27324a;
+    --brand:#3b82f6;
+    --brand-d:#2563eb;
+    --brand-l:#1a2740;
+    --text:#e7ecf5;
+    --text2:#8b97ac;
+    --text3:#5e6b82;
+    --me:#2563eb;
+    --me-text:#ffffff;
+    --other:#1d3a2c;        /* 客户绿(暗) */
+    --other-text:#b8e6c8;
+    --other-bd:#2e5740;
+    --del:#ff6b5e;
+    --del-bg:#3a1f1d;
+    --kw-bg:#7a5a10;
+    --kw-text:#ffe9a8;
+    --ok:#2dd4a0;
+    --shadow:0 1px 3px rgba(0,0,0,.3);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;
+    overflow:hidden;transition:background .2s,color .2s;
+  }
+  /* ============ 登录页 ============ */
+  #login{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100}
+  .login-box{
+    background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:38px 32px;width:330px;box-shadow:0 10px 40px rgba(20,40,80,.12);
+  }
+  .login-box .brand{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:4px}
+  .login-box .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand-d));
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px}
+  .login-box h1{font-size:19px;color:var(--text);text-align:center;letter-spacing:.5px}
+  .login-box .sub{text-align:center;color:var(--text2);font-size:12px;margin-bottom:24px;letter-spacing:2px}
+  .login-box input{
+    width:100%;padding:12px 14px;margin-bottom:13px;border:1px solid var(--line);
+    border-radius:10px;font-size:15px;background:var(--panel2);color:var(--text);outline:none;
+  }
+  .login-box input:focus{border-color:var(--brand)}
+  .login-box .lg-remember{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text2);
+    margin:-4px 0 14px 2px;cursor:pointer;user-select:none}
+  .login-box .lg-remember input{width:auto;margin:0;cursor:pointer;accent-color:var(--brand)}
+  .login-box button{
+    width:100%;padding:13px;background:linear-gradient(135deg,var(--brand),var(--brand-d));color:#fff;border:none;
+    border-radius:10px;font-size:15px;cursor:pointer;letter-spacing:3px;font-weight:600;
+  }
+  .login-box button:active{opacity:.9}
+  .login-err{color:var(--del);font-size:12px;text-align:center;margin-top:10px;min-height:16px}
+  /* ============ 主界面 ============ */
+  #app{display:none;height:100%;flex-direction:column}
+  .topbar{background:var(--panel);border-bottom:1px solid var(--line);padding:9px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+  .topbar .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--brand),var(--brand-d));
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex-shrink:0}
+  .topbar .tt{display:flex;flex-direction:column;line-height:1.15}
+  .topbar .tt b{font-size:15px;letter-spacing:.5px}
+  .topbar .tt span{font-size:10px;color:var(--text3);letter-spacing:2px}
+  .topbar .who{font-size:13px;color:var(--text);background:var(--brand-l);padding:5px 14px;border-radius:8px;font-weight:600;margin-left:6px}
+  .topbar .spacer{flex:1}
+  .topbar select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:12px;outline:none;max-width:140px;cursor:pointer}
+  .topbar .ib{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
+  .topbar .ib:hover{border-color:var(--brand)}
+  .auto-ind{font-size:11px;color:var(--ok);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:5px 9px;white-space:nowrap}
+  .auto-ind.flash{animation:flashdot .6s}
+  @keyframes flashdot{0%{background:var(--brand-l)}100%{background:var(--panel2)}}
+  /* 红线词条 */
+  .kwbar{background:var(--panel2);border-bottom:1px solid var(--line);padding:7px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
+  .kwbar .lbl{font-size:12px;color:var(--del);font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:3px}
+  .kw-tag{display:inline-flex;align-items:center;gap:5px;background:var(--del-bg);color:var(--del);border:1px solid var(--del);border-radius:13px;padding:2px 10px;font-size:12px}
+  .kw-tag .x{cursor:pointer;font-weight:700;opacity:.6;font-size:14px;line-height:1}
+  .kw-tag .x:hover{opacity:1}
+  .kw-add{border:1px solid var(--line);border-radius:13px;padding:4px 11px;font-size:12px;background:var(--panel);color:var(--text);outline:none;width:120px}
+  .kw-add:focus{border-color:var(--brand)}
+  .kw-addbtn{background:var(--brand);color:#fff;border:none;border-radius:13px;padding:5px 13px;font-size:12px;cursor:pointer;font-weight:600}
+  .kw-empty{font-size:12px;color:var(--text3)}
+  .body{flex:1;display:flex;overflow:hidden}
+  /* 左侧 */
+  .sidebar{width:330px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0}
+  .search-wrap{padding:11px;border-bottom:1px solid var(--line)}
+  .search-wrap .si{position:relative}
+  .search-wrap input{width:100%;padding:10px 13px 10px 34px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);outline:none;font-size:13px;color:var(--text)}
+  .search-wrap input:focus{border-color:var(--brand)}
+  .search-wrap .si::before{content:"🔍";position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;opacity:.5}
+  /* 统计条:左外事号 右广告主 */
+  .stat{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--panel2)}
+  .stat .s-l{font-size:12px;color:var(--text2)}
+  .stat .s-l b{color:var(--brand);font-size:15px;margin-left:3px}
+  .stat .s-r{font-size:12px;color:var(--text2)}
+  .stat .s-r b{color:var(--text);font-size:15px;margin-left:3px}
+  .acc-list{flex:1;overflow-y:auto}
+  .dept-head{padding:7px 14px;font-size:12px;color:var(--brand-d);background:var(--panel2);font-weight:700;position:sticky;top:0;display:flex;justify-content:space-between;border-bottom:1px solid var(--line);z-index:1}
+  .dept-head .dcount{color:var(--text3);font-weight:400}
+  .acc-item{padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;align-items:center;gap:10px}
+  .acc-item:hover{background:var(--brand-l)}
+  .acc-item.active{background:var(--brand-l);border-left:3px solid var(--brand)}
+  .acc-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand-d));color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;font-weight:600}
+  .acc-info{flex:1;min-width:0}
+  .acc-name{font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+  .acc-meta{font-size:11px;color:var(--text2)}
+  .acc-arrow{color:var(--text3);font-size:14px;transition:transform .2s}
+  .acc-item.expanded .acc-arrow{transform:rotate(90deg)}
+  /* 手风琴:外事号下展开的广告主子列表 */
+  .adv-sublist{display:none;background:var(--panel2);border-bottom:1px solid var(--line)}
+  .adv-sublist.open{display:block}
+  .adv-sub-item{padding:8px 14px 8px 40px;cursor:pointer;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--line)}
+  .adv-sub-item:last-child{border-bottom:none}
+  .adv-sub-item:hover{background:var(--brand-l)}
+  .adv-sub-item.active{background:var(--brand-l);border-left:3px solid var(--brand);padding-left:37px}
+  .adv-sub-dot{width:7px;height:7px;border-radius:50%;background:var(--brand);flex-shrink:0;opacity:.5}
+  .adv-sub-item.active .adv-sub-dot{opacity:1}
+  .adv-sub-info{flex:1;min-width:0}
+  .adv-sub-name{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .adv-sub-cnt{font-size:10px;color:var(--text3)}
+  .adv-sub-loading{padding:10px 40px;font-size:12px;color:var(--text2)}
+  .adv-sub-empty{padding:10px 40px;font-size:12px;color:var(--text3)}
+  /* 右侧 */
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--panel2)}
+  .main-head{padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex-shrink:0;display:flex;align-items:center;gap:11px}
+  .main-head .h-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand-d));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0}
+  .main-head .h-name{font-size:15px;font-weight:600}
+  .main-head .h-meta{font-size:12px;color:var(--text2)}
+  .main-head .h-grow{flex:1}
+  /* 对话框内搜索 */
+  .inbox-search{display:none;align-items:center;gap:6px}
+  .inbox-search.show{display:flex}
+  .inbox-search input{width:160px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);outline:none;font-size:12px}
+  .inbox-search input:focus{border-color:var(--brand)}
+  .inbox-search .n{font-size:11px;color:var(--text2);white-space:nowrap}
+  .content{flex:1;overflow-y:auto;padding:14px 16px}
+  .empty{height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:14px;flex-direction:column;gap:12px}
+  .empty .ei{font-size:46px;opacity:.5}
+  /* 广告主块 */
+  .adv-block{margin-bottom:16px;background:var(--panel);border:1px solid var(--line);border-radius:11px;overflow:hidden;box-shadow:var(--shadow)}
+  .adv-head{padding:10px 15px;background:var(--brand-l);font-size:14px;font-weight:600;color:var(--brand-d);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+  .adv-head .cnt{font-size:11px;color:var(--text2);font-weight:400}
+  .adv-msgs{padding:12px 15px;display:none}
+  .adv-msgs.open{display:block}
+  /* === 消息:全部靠左,每条标发送者 === */
+  .msg{display:flex;gap:9px;margin-bottom:11px;align-items:flex-start}
+  .msg .m-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex-shrink:0;font-weight:600}
+  .msg.me .m-av{background:var(--brand)}
+  .msg.me .m-av{background:var(--me)}
+  .msg.other .m-av{background:#3aa66e}
+  .msg .m-body{flex:1;min-width:0}
+  .msg .m-top{display:flex;align-items:center;gap:7px;margin-bottom:2px}
+  .msg .m-sender{font-size:12px;font-weight:600}
+  .msg.me .m-sender{color:var(--me)}
+  .msg.other .m-sender{color:#2e8b57}
+  .msg .m-time{font-size:10px;color:var(--text3)}
+  .msg .m-text{font-size:13px;white-space:pre-wrap;word-break:break-word;padding:7px 11px;border-radius:9px;display:inline-block;max-width:100%}
+  .msg.me .m-text{background:var(--me);color:var(--me-text)}
+  .msg.other .m-text{background:var(--other);color:var(--other-text);border:1px solid var(--other-bd)}
+  /* 删除消息:红色删除线+醒目 */
+  .msg.deleted .m-text{background:var(--del-bg);border:1.5px dashed var(--del);color:var(--del);text-decoration:line-through;text-decoration-color:var(--del)}
+  .del-badge{display:inline-block;background:var(--del);color:#fff;font-size:10px;padding:0 6px;border-radius:4px;margin-left:6px;font-weight:600;letter-spacing:1px;vertical-align:middle}
+  /* 关键词高亮 */
+  .kwhit{background:var(--kw-bg);color:var(--kw-text);font-weight:700;padding:0 2px;border-radius:3px}
+  mark{background:var(--kw-bg);color:var(--kw-text);padding:0 2px;border-radius:2px}
+  /* 搜索结果 */
+  .sr-item{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin-bottom:9px;cursor:pointer;box-shadow:var(--shadow)}
+  .sr-item:hover{border-color:var(--brand)}
+  .sr-item.deleted{border-color:var(--del);background:var(--del-bg)}
+  .sr-top{font-size:11px;color:var(--text2);margin-bottom:5px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .sr-tag{background:var(--brand-l);color:var(--brand-d);padding:1px 8px;border-radius:5px;font-weight:600}
+  .sr-content{font-size:13px;color:var(--text);white-space:pre-wrap;word-break:break-word}
+  .sr-item.deleted .sr-content{text-decoration:line-through;color:var(--del)}
+  .loading{text-align:center;color:var(--text2);padding:30px;font-size:13px}
+  .seg{display:flex;gap:0;margin-top:9px;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{flex:1;padding:7px;background:var(--panel);color:var(--text2);border:none;font-size:12px;cursor:pointer}
+  .seg button.on{background:var(--brand);color:#fff;font-weight:600}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px}
+  ::-webkit-scrollbar-track{background:transparent}
+  .back-btn{display:none;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;color:var(--text)}
+  @media(max-width:720px){
+    .sidebar{width:100%;position:absolute;inset:0;z-index:5;transition:transform .2s}
+    .sidebar.hide{transform:translateX(-100%)}
+    .main{width:100%}
+    .back-btn{display:inline-block}
+    .topbar .tt span{display:none}
+    .topbar select{max-width:96px}
+    .inbox-search input{width:110px}
+  }
+</style>
+</head>
+<body>
+
+<!-- 登录页 -->
+<div id="login">
+  <div class="login-box">
+    <div class="brand"><div class="logo">YZ</div></div>
+    <h1>YYZL封控速查</h1>
+    <div class="sub">TG MONITOR · 数据库版</div>
+    <input id="lg-user" placeholder="监察员名" autocomplete="off">
+    <input id="lg-pass" type="password" placeholder="密码" autocomplete="off">
+    <label class="lg-remember"><input type="checkbox" id="lg-remember" checked> 记住账号密码</label>
+    <button onclick="doLogin()">登 录</button>
+    <div class="login-err" id="lg-err"></div>
+  </div>
+</div>
+
+<!-- 主界面 -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">YZ</div>
+    <div class="tt"><b>YYZL封控速查</b><span>TG MONITOR</span></div>
+    <span class="who" id="who"></span>
+    <span class="spacer"></span>
+    <span class="auto-ind" id="autoInd" title="30秒自动刷新">● 30s</span>
+    <select id="viewAs" style="display:none" onchange="switchView()"></select>
+    <button class="ib" id="themeBtn" onclick="toggleTheme()" title="日夜模式">🌙</button>
+    <button class="ib" onclick="logout()">退出</button>
+  </div>
+
+  <div class="kwbar" id="kwbar">
+    <span class="lbl">🚩 红线词</span>
+    <span id="kwTags"></span>
+    <input class="kw-add" id="kwInput" placeholder="输入关键词…" onkeydown="if(event.key==='Enter')addKeyword()">
+    <button class="kw-addbtn" onclick="addKeyword()">+ 新增</button>
+  </div>
+
+  <div class="body">
+    <div class="sidebar" id="sidebar">
+      <div class="search-wrap">
+        <div class="si"><input id="searchBox" placeholder="搜索外事号 / 广告主 / 对话内容…" onkeydown="if(event.key==='Enter')doSearch()"></div>
+        <div class="seg">
+          <button id="seg-name" class="on" onclick="setMode('name')">按名字</button>
+          <button id="seg-content" onclick="setMode('content')">按内容</button>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="s-l">外事号<b id="statAcc">0</b></span>
+        <span class="s-r">广告主<b id="statAdv">0</b></span>
+      </div>
+      <div class="acc-list" id="accList"></div>
+    </div>
+    <div class="main">
+      <div class="main-head">
+        <button class="back-btn" onclick="showSidebar()">‹</button>
+        <div class="h-av" id="hAv" style="display:none"></div>
+        <div>
+          <div class="h-name" id="mainName">请选择外事号</div>
+          <div class="h-meta" id="mainMeta"></div>
+        </div>
+        <div class="h-grow"></div>
+        <div class="inbox-search" id="inboxSearch">
+          <input id="inboxBox" placeholder="搜本对话…" oninput="filterInbox()">
+          <span class="n" id="inboxN"></span>
+        </div>
+      </div>
+      <div class="content" id="content">
+        <div class="empty"><div class="ei">💬</div><div>从左侧点开外事号，选择广告主查看对话</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "";
+let STATE = {user:"", isLeader:false, viewAs:"", accounts:[], keywords:[], mode:"name", curAdvs:null, curAccountId:null, autoTimer:null, expandedAccId:null, curAdvId:null, curAdvCache:{}};
+
+function api(p){ return API + p; }
+
+async function doLogin(){
+  const user = document.getElementById('lg-user').value.trim();
+  const pass = document.getElementById('lg-pass').value;
+  const err = document.getElementById('lg-err');
+  err.textContent = "";
+  if(!user){ err.textContent="请输入监察员名"; return; }
+  try{
+    const r = await fetch(api('/api/login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user,password:pass})});
+    if(!r.ok){ const e=await r.json(); err.textContent=e.detail||"登录失败"; return; }
+    const d = await r.json();
+    STATE.user=d.username; STATE.isLeader=d.is_leader; STATE.viewAs=d.username;
+    // 记住账号密码 + 登录态(刷新不掉线)
+    try{
+      if(document.getElementById('lg-remember').checked){
+        localStorage.setItem('yyzl_user', user);
+        localStorage.setItem('yyzl_pass', pass);
+      }else{
+        localStorage.removeItem('yyzl_user');
+        localStorage.removeItem('yyzl_pass');
+      }
+      localStorage.setItem('yyzl_session', JSON.stringify({user:d.username,isLeader:d.is_leader}));
+    }catch(e){}
+    enterApp();
+  }catch(e){ err.textContent="连接失败: "+e.message; }
+}
+
+async function enterApp(){
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('who').textContent = STATE.user;
+  await loadOperators();
+  await loadKeywords();
+  loadSkeleton();
+}
+
+async function loadOperators(){
+  const sel = document.getElementById('viewAs');
+  try{
+    const r = await fetch(api('/api/operators?username='+encodeURIComponent(STATE.user)));
+    const d = await r.json();
+    const ops = d.operators || [STATE.user];
+    if(ops.length>1){
+      sel.style.display='inline-block';
+      sel.innerHTML = ops.map(o=>`<option value="${o}">${o===STATE.user?('我自己('+o+')'):o}</option>`).join('');
+      sel.value = STATE.user;
+    }else{ sel.style.display='none'; }
+  }catch(e){ sel.style.display='none'; }
+}
+
+function switchView(){
+  STATE.viewAs = document.getElementById('viewAs').value;
+  STATE.expandedAccId=null; STATE.curAdvId=null; STATE.curAccountId=null; STATE.curAdvCache={}; STATE.curAdvs=null;
+  if(STATE.autoTimer) clearInterval(STATE.autoTimer);
+  loadSkeleton();
+  document.getElementById('content').innerHTML='<div class="empty"><div class="ei">💬</div><div>已切换到 '+esc(STATE.viewAs)+'</div></div>';
+  document.getElementById('mainName').textContent="请选择外事号";
+  document.getElementById('mainMeta').textContent="";
+  document.getElementById('hAv').style.display='none';
+  document.getElementById('inboxSearch').classList.remove('show');
+}
+
+function setMode(m){
+  STATE.mode = m;
+  document.getElementById('seg-name').classList.toggle('on', m==='name');
+  document.getElementById('seg-content').classList.toggle('on', m==='content');
+  const q = document.getElementById('searchBox').value.trim();
+  if(q) doSearch(); 
+}
+
+async function loadSkeleton(){
+  const list = document.getElementById('accList');
+  list.innerHTML='<div class="loading">加载中…</div>';
+  try{
+    const r = await fetch(api('/api/skeleton?username='+encodeURIComponent(STATE.user)+'&view_as='+encodeURIComponent(STATE.viewAs)));
+    if(!r.ok){ list.innerHTML='<div class="loading">加载失败</div>'; return; }
+    const d = await r.json();
+    STATE.accounts = d.accounts||[];
+    document.getElementById('statAcc').textContent = d.total||STATE.accounts.length;
+    let totalAdv = 0; STATE.accounts.forEach(a=>totalAdv+=(a.adv_count||0));
+    document.getElementById('statAdv').textContent = totalAdv;
+    renderAccList(STATE.accounts);
+  }catch(e){ list.innerHTML='<div class="loading">连接失败</div>'; }
+}
+
+function renderAccList(accounts){
+  const list = document.getElementById('accList');
+  if(!accounts.length){ list.innerHTML='<div class="loading">暂无外事号</div>'; return; }
+  const groups={};
+  accounts.forEach(a=>{ (groups[a.dept]=groups[a.dept]||[]).push(a); });
+  let html="";
+  Object.keys(groups).forEach(dept=>{
+    html += `<div class="dept-head"><span>${esc(dept)}</span><span class="dcount">${groups[dept].length} 个外事号</span></div>`;
+    groups[dept].forEach(a=>{
+      const ch=(a.account_name||'?').trim().charAt(0);
+      html += `<div class="acc-item" data-id="${a.id}" data-name="${esc(a.account_name)}" onclick="toggleAccount(${a.id},this)">
+        <div class="acc-avatar">${esc(ch)}</div>
+        <div class="acc-info"><div class="acc-name">${esc(a.account_name)}</div><div class="acc-meta">${a.adv_count} 个广告主</div></div>
+        <div class="acc-arrow">›</div></div>
+        <div class="adv-sublist" data-sub="${a.id}"></div>`;
+    });
+  });
+  list.innerHTML=html;
+}
+
+// 点外事号:在左边手风琴展开它的广告主列表(其他外事号收起)
+async function toggleAccount(id, el, forceOpen){
+  const sub = document.querySelector('.adv-sublist[data-sub="'+id+'"]');
+  // 已经展开的 → 收起(forceOpen时跳过此步,保持展开)
+  if(!forceOpen && STATE.expandedAccId===id && el.classList.contains('expanded')){
+    el.classList.remove('expanded');
+    if(sub) sub.classList.remove('open');
+    STATE.expandedAccId=null;
+    return;
+  }
+  // 已展开且有缓存,且是forceOpen,直接用缓存渲染不重新请求
+  if(forceOpen && STATE.curAdvCache[id] && el.classList.contains('expanded')){
+    return;
+  }
+  // 收起其他所有
+  document.querySelectorAll('.acc-item.expanded').forEach(x=>x.classList.remove('expanded'));
+  document.querySelectorAll('.adv-sublist.open').forEach(x=>x.classList.remove('open'));
+  el.classList.add('expanded');
+  STATE.expandedAccId=id;
+  if(sub){ sub.classList.add('open'); sub.innerHTML='<div class="adv-sub-loading">加载广告主中…</div>'; }
+  try{
+    const r=await fetch(api('/api/advertisers?account_id='+id));
+    if(!r.ok){ if(sub) sub.innerHTML='<div class="adv-sub-empty">加载失败</div>'; return; }
+    const d=await r.json();
+    STATE.curAdvCache[id]=d;  // 缓存,点广告主时直接用
+    renderSubList(id, d);
+  }catch(e){ if(sub) sub.innerHTML='<div class="adv-sub-empty">连接失败</div>'; }
+}
+
+function renderSubList(accId, d){
+  const sub=document.querySelector('.adv-sublist[data-sub="'+accId+'"]');
+  if(!sub) return;
+  const advs=d.advertisers||[];
+  if(!advs.length){ sub.innerHTML='<div class="adv-sub-empty">该外事号暂无广告主</div>'; return; }
+  let html='';
+  advs.forEach(ad=>{
+    html += `<div class="adv-sub-item" data-advid="${ad.adv_id}" onclick="openAdv(${accId},${ad.adv_id},this)">
+      <div class="adv-sub-dot"></div>
+      <div class="adv-sub-info"><div class="adv-sub-name">${esc(ad.adv_name)}</div><div class="adv-sub-cnt">${ad.messages.length} 条对话</div></div>
+    </div>`;
+  });
+  sub.innerHTML=html;
+}
+
+// 点广告主:右边显示该广告主的完整对话
+function openAdv(accId, advId, el){
+  document.querySelectorAll('.adv-sub-item.active').forEach(x=>x.classList.remove('active'));
+  if(el) el.classList.add('active');
+  hideSidebar();
+  STATE.curAccountId=accId;
+  STATE.curAdvId=advId;
+  const d=STATE.curAdvCache[accId];
+  if(!d){ return; }
+  const ad=(d.advertisers||[]).find(a=>a.adv_id===advId);
+  if(!ad) return;
+  // 头部:外事号名 + 广告主名
+  const av=document.getElementById('hAv');
+  av.style.display='flex'; av.textContent=(ad.adv_name||'?').trim().charAt(0);
+  document.getElementById('mainName').textContent=ad.adv_name;
+  document.getElementById('mainMeta').textContent=d.account.dept+' · '+d.account.account_name;
+  STATE.curAdvs=[ad];   // 只渲染这一个广告主的对话
+  document.getElementById('inboxBox').value='';
+  renderChat(ad);
+  document.getElementById('inboxSearch').classList.add('show');
+  startAutoRefresh();
+}
+
+// 30秒自动刷新当前打开的广告主对话
+function startAutoRefresh(){
+  if(STATE.autoTimer) clearInterval(STATE.autoTimer);
+  STATE.autoTimer = setInterval(silentRefresh, 30000);
+}
+async function silentRefresh(){
+  const accId = STATE.curAccountId, advId = STATE.curAdvId;
+  if(!accId || !advId) return;
+  if(document.getElementById('searchBox').value.trim()) return;  // 搜索中不刷新
+  try{
+    const r=await fetch(api('/api/advertisers?account_id='+accId));
+    if(!r.ok) return;
+    const d=await r.json();
+    STATE.curAdvCache[accId]=d;
+    const ad=(d.advertisers||[]).find(a=>a.adv_id===advId);
+    if(!ad) return;
+    const content=document.getElementById('content');
+    const scrollTop=content.scrollTop;
+    STATE.curAdvs=[ad];
+    const iq=document.getElementById('inboxBox').value;
+    renderChat(ad, iq);
+    content.scrollTop=scrollTop;
+    const ind=document.getElementById('autoInd');
+    if(ind){ ind.classList.add('flash'); setTimeout(()=>ind.classList.remove('flash'),600); }
+  }catch(e){}
+}
+
+// 渲染单个广告主的对话(全部靠左,员工蓝/客户绿气泡,最早在上最新在下)
+function renderChat(ad, inboxQ){
+  const content=document.getElementById('content');
+  const iq=(inboxQ||'').trim();
+  let msgs=ad.messages;
+  if(iq){ msgs=msgs.filter(m=>(m.content||'').toLowerCase().includes(iq.toLowerCase())); }
+  if(iq && !msgs.length){
+    content.innerHTML='<div class="empty"><div class="ei">🔍</div><div>本对话内没有「'+esc(iq)+'」</div></div>';
+    document.getElementById('inboxN').textContent=''; return;
+  }
+  if(!msgs.length){
+    content.innerHTML='<div class="empty"><div class="ei">📭</div><div>该广告主暂无对话</div></div>';
+    document.getElementById('inboxN').textContent=''; return;
+  }
+  let html='';
+  msgs.forEach(m=>{
+    const isMe=m.sender==='A';
+    const cls=isMe?'me':'other';
+    const senderName=isMe?'员工':esc(ad.adv_name||'客户');
+    const av=isMe?'员':(esc(ad.adv_name||'客').trim().charAt(0));
+    const delCls=m.deleted?' deleted':'';
+    const delBadge=m.deleted?'<span class="del-badge">已删除</span>':'';
+    const txt=iq?hl(m.content,iq):kwHl(m.content);
+    html += `<div class="msg ${cls}${delCls}">
+      <div class="m-av">${av}</div>
+      <div class="m-body">
+        <div class="m-top"><span class="m-sender">${senderName}</span><span class="m-time">${fmtTime(m.msg_time)}</span>${delBadge}</div>
+        <div class="m-text">${txt}</div>
+      </div></div>`;
+  });
+  content.innerHTML=html;
+  document.getElementById('inboxN').textContent = iq ? ('命中 '+msgs.length+' 条') : '';
+}
+
+async function doSearch(){
+  const q=document.getElementById('searchBox').value.trim();
+  if(!q){ loadSkeleton(); restoreMain(); return; }
+  if(STATE.mode==='name'){ filterByName(q); return; }
+  // 按内容:调API全局搜对话
+  const content=document.getElementById('content');
+  hideSidebar();
+  content.innerHTML='<div class="loading">搜索中…</div>';
+  document.getElementById('hAv').style.display='none';
+  document.getElementById('mainName').textContent='内容搜索:'+q;
+  document.getElementById('mainMeta').textContent='';
+  document.getElementById('inboxSearch').classList.remove('show');
+  try{
+    const r=await fetch(api('/api/search?username='+encodeURIComponent(STATE.user)+'&view_as='+encodeURIComponent(STATE.viewAs)+'&q='+encodeURIComponent(q)));
+    const d=await r.json();
+    document.getElementById('mainMeta').textContent='共 '+d.count+' 条结果';
+    if(!d.results.length){ content.innerHTML='<div class="empty"><div class="ei">🔍</div><div>没有找到包含「'+esc(q)+'」的对话</div></div>'; return; }
+    let html='';
+    d.results.forEach(m=>{
+      const delCls=m.deleted?' deleted':''; const delBadge=m.deleted?'<span class="del-badge">已删除</span>':'';
+      html += `<div class="sr-item${delCls}" onclick="jumpToAccount(${m.account_id},${m.adv_id||'null'})">
+        <div class="sr-top"><span class="sr-tag">${esc(m.account_name)}</span><span>${esc(m.dept)}</span><span>${esc(m.adv_name||'')}</span><span>${m.sender==='A'?'员工':'客户'}</span><span>${fmtTime(m.msg_time)}</span>${delBadge}</div>
+        <div class="sr-content">${hl(m.content,q)}</div></div>`;
+    });
+    content.innerHTML=html;
+  }catch(e){ content.innerHTML='<div class="loading">搜索失败</div>'; }
+}
+
+// 按名字:本地过滤外事号 + 广告主名
+function filterByName(q){
+  const ql=q.toLowerCase();
+  const filtered = STATE.accounts.filter(a=>(a.account_name||'').toLowerCase().includes(ql));
+  renderAccList(filtered);
+}
+
+// 对话框内搜索:在当前广告主对话里过滤
+function filterInbox(){
+  if(!STATE.curAdvs || !STATE.curAdvs.length) return;
+  const q=document.getElementById('inboxBox').value;
+  renderChat(STATE.curAdvs[0], q);
+}
+
+// 搜索结果点击:展开该外事号,若带广告主则直接打开该广告主对话
+function jumpToAccount(accId, advId){
+  document.getElementById('searchBox').value='';
+  loadSkeleton().then(()=>{
+    const el=document.querySelector('.acc-item[data-id="'+accId+'"]');
+    if(!el){ return; }
+    el.scrollIntoView({block:'center'});
+    toggleAccount(accId, el, true).then(()=>{
+      if(advId){
+        const advEl=document.querySelector('.adv-sub-item[data-advid="'+advId+'"]');
+        if(advEl){ advEl.scrollIntoView({block:'center'}); openAdv(accId, advId, advEl); }
+      }
+    });
+  });
+}
+
+function restoreMain(){
+  document.getElementById('content').innerHTML='<div class="empty"><div class="ei">💬</div><div>从左侧点开外事号，选择广告主查看对话</div></div>';
+  document.getElementById('mainName').textContent='请选择外事号';
+  document.getElementById('mainMeta').textContent='';
+  document.getElementById('hAv').style.display='none';
+}
+
+// 红线词
+async function loadKeywords(){
+  try{ const r=await fetch(api('/api/keywords')); const d=await r.json(); STATE.keywords=(d.keywords||[]).map(k=>k.word); renderKeywords(); }
+  catch(e){ STATE.keywords=[]; renderKeywords(); }
+}
+function renderKeywords(){
+  const box=document.getElementById('kwTags');
+  if(!STATE.keywords.length){ box.innerHTML='<span class="kw-empty">暂无,可在右侧新增</span>'; return; }
+  box.innerHTML = STATE.keywords.map(w=>{
+    const x = STATE.isLeader ? `<span class="x" onclick="delKeyword('${esc(w).replace(/'/g,'')}')">×</span>` : '';
+    return `<span class="kw-tag">${esc(w)}${x}</span>`;
+  }).join('');
+}
+async function addKeyword(){
+  const inp=document.getElementById('kwInput'); const word=inp.value.trim(); if(!word) return;
+  try{ const r=await fetch(api('/api/keywords/add'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:STATE.user,word})});
+    if(r.ok){ inp.value=''; await loadKeywords(); refreshHl(); } else{ const e=await r.json(); alert(e.detail||'新增失败'); } }
+  catch(e){ alert('连接失败'); }
+}
+async function delKeyword(word){
+  if(!confirm('删除红线词「'+word+'」?')) return;
+  try{ const r=await fetch(api('/api/keywords/delete'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:STATE.user,word})});
+    if(r.ok){ await loadKeywords(); refreshHl(); } else{ const e=await r.json(); alert(e.detail||'删除失败'); } }
+  catch(e){ alert('连接失败'); }
+}
+function refreshHl(){ if(STATE.curAdvs && STATE.curAdvs.length){ const q=document.getElementById('inboxBox').value; renderChat(STATE.curAdvs[0],q); } }
+
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function kwHl(s){
+  let out=esc(s);
+  if(!STATE.keywords||!STATE.keywords.length) return out;
+  STATE.keywords.forEach(w=>{ if(!w) return; const ew=esc(w).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); try{ out=out.replace(new RegExp(ew,'gi'),m=>'<span class="kwhit">'+m+'</span>'); }catch(e){} });
+  return out;
+}
+function hl(s,q){
+  let out=kwHl(s); const qq=esc(q);
+  if(qq){ try{ out=out.replace(new RegExp(qq.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>'<mark>'+m+'</mark>'); }catch(e){} }
+  return out;
+}
+function fmtTime(t){ if(!t) return ''; return String(t).replace('T',' ').slice(0,16); }
+function logout(){
+  try{ localStorage.removeItem('yyzl_session'); }catch(e){}
+  location.reload();
+}
+function hideSidebar(){ if(window.innerWidth<=720) document.getElementById('sidebar').classList.add('hide'); }
+function showSidebar(){ document.getElementById('sidebar').classList.remove('hide'); }
+
+function toggleTheme(){
+  const dark=document.body.classList.toggle('dark');
+  document.getElementById('themeBtn').textContent = dark?'☀️':'🌙';
+  try{ localStorage.setItem('yyzl_theme', dark?'dark':'light'); }catch(e){}
+}
+(function(){ try{ if(localStorage.getItem('yyzl_theme')==='dark') document.body.classList.add('dark'); }catch(e){} })();
+
+document.getElementById('lg-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+document.getElementById('lg-user').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('lg-pass').focus(); });
+if(document.body.classList.contains('dark')) document.getElementById('themeBtn').textContent='☀️';
+
+// ===== 页面加载:自动填回账号密码 + 刷新自动恢复登录 =====
+(function restoreLogin(){
+  try{
+    // 1. 自动填回记住的账号密码
+    const savedUser = localStorage.getItem('yyzl_user');
+    const savedPass = localStorage.getItem('yyzl_pass');
+    if(savedUser){ document.getElementById('lg-user').value = savedUser; }
+    if(savedPass!==null){ document.getElementById('lg-pass').value = savedPass; }
+    document.getElementById('lg-remember').checked = !!savedUser;
+    // 2. 刷新自动恢复登录态(无需重新输入)
+    const sess = localStorage.getItem('yyzl_session');
+    if(sess){
+      const s = JSON.parse(sess);
+      if(s && s.user){
+        STATE.user = s.user; STATE.isLeader = !!s.isLeader; STATE.viewAs = s.user;
+        enterApp();
+      }
+    }
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
